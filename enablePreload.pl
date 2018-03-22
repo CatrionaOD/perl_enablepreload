@@ -80,6 +80,7 @@ foreach my $file (@change_array) {
     last if $_ =~ /OPENSSL_ENGINES=/;
   }
   my($filename, $directories, $suffix) = fileparse($file);
+
   my $line = <$in>;
   print $out "NFAST_NFKM_TOKENSFILE=/sys_apps_01/apache/server20Cent/logs/$filename/nfkm_preload\n";
   next if ( $_ =~ /export LD_LIBRARY_PATH LIBPATH OPENSSL_ENGINES/);
@@ -96,9 +97,28 @@ foreach my $file (@change_array) {
     print $out $_ unless ( $_ =~ /HTTPD=/ );
   }
   rename ("$file.new", $file) || die "Unable to rename: $!";
-}
-print ("\n\n**Preload successfully enabled!**\n");
-## use bash command to restart instances.
-foreach my $file (@change_array) {
+  int ("\n\n**Preload successfully enabled!**\n");
+   use bash command to restart instances.
+  reach my $file (@change_array) {
+  my($filename, $directories, $suffix) = fileparse($file);
   system ("apachectl --version=20Cent --instance=$file --command=start");
-}
+  my $run_check = 0;
+  my $time = 0;
+  while (($run_check ==0)&&($time<30)) {
+    system ("if pgrep -x $filename > /dev/null
+            then
+              $run_check = 1;
+            else
+              sleep(3);
+              $time += 3;
+          fi");
+  }
+  if ($run_check == 1) {
+    print "\n$filename has been restarted successfully.";
+  }
+  else {
+    print "\n$filename was not successfully restarted, back up file will bei restarted instead.";
+    my $bkup_file = $filename."_".$curr_date;
+    system ("apachectl --version=20Cent --instance=$bkup_file --command=start");
+        }
+}        
