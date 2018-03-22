@@ -1,4 +1,4 @@
-usr/bin/perl
+#!/usr/bin/perl
 use 5.010;
 use strict;
 use warnings;
@@ -58,7 +58,7 @@ my $curr_date = $year . $mon . $day;
 my @bkup_files;
 foreach my $file (@change_array) {
   my $new_file = $file . "_" . $curr_date;
-y($file, "$new_file") or die "Copy failed: $!";
+ copy($file, "$new_file") or die "Copy failed: $!";
   push @bkup_files, $new_file;
 }
 print ("\n\nBackup files created: \n");
@@ -80,7 +80,6 @@ foreach my $file (@change_array) {
     last if $_ =~ /OPENSSL_ENGINES=/;
   }
   my($filename, $directories, $suffix) = fileparse($file);
-
   my $line = <$in>;
   print $out "NFAST_NFKM_TOKENSFILE=/sys_apps_01/apache/server20Cent/logs/$filename/nfkm_preload\n";
   next if ( $_ =~ /export LD_LIBRARY_PATH LIBPATH OPENSSL_ENGINES/);
@@ -97,9 +96,10 @@ foreach my $file (@change_array) {
     print $out $_ unless ( $_ =~ /HTTPD=/ );
   }
   rename ("$file.new", $file) || die "Unable to rename: $!";
-  int ("\n\n**Preload successfully enabled!**\n");
-   use bash command to restart instances.
-  reach my $file (@change_array) {
+}
+print ("\n\n**Preload successfully enabled!**\n");
+## For each file in change_array, we restart the instance. If it doesn't successfully restart in 30 seconds, user is notified and     the backup file is restarted instead.
+foreach my $file (@change_array) {
   my($filename, $directories, $suffix) = fileparse($file);
   system ("apachectl --version=20Cent --instance=$file --command=start");
   my $run_check = 0;
@@ -117,8 +117,8 @@ foreach my $file (@change_array) {
     print "\n$filename has been restarted successfully.";
   }
   else {
-    print "\n$filename was not successfully restarted, back up file will bei restarted instead.";
+    print "\n$filename was not successfully restarted, back up file will be restarted instead.";
     my $bkup_file = $filename."_".$curr_date;
     system ("apachectl --version=20Cent --instance=$bkup_file --command=start");
-        }
-}        
+  }
+}
